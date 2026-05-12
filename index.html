@@ -50,22 +50,19 @@
             </div>
 
             <div class="global-timer-area">
-                <span style="font-size: 0.8rem; color: #aaa;">SISA WAKTU SESI TOTAL:</span><br>
+                <span style="font-size: 0.8rem; color: #aaa; letter-spacing: 1px;">SISA WAKTU SESI TOTAL:</span><br>
                 <span id="globalTimerDisplay" class="yellow-text" style="font-size: 1.8rem; font-family: 'Courier New', monospace; font-weight: bold;">10:00</span>
             </div>
 
             <h3 class="cyan-text text-left">TARGET BLUEPRINTS:</h3>
-            <div class="blueprint-container" id="blueprint-area">
-                </div>
+            <div class="blueprint-container" id="blueprint-area"></div>
 
             <p id="feedback-msg" class="feedback-msg"></p>
 
             <div class="builder-area">
                 <h3 class="gold-text">MEJA RAKIT (TAMPAK ATAS):</h3>
-                <p style="color:#888; font-size:0.9rem; margin-top:-10px; margin-bottom:15px;">*Klik kiri menumpuk, klik kanan/tahan untuk mengurangi</p>
-                
-                <div id="builder-grid" class="builder-grid">
-                    </div>
+                <p style="color:#888; font-size:0.9rem; margin-top:-10px; margin-bottom:15px;">*Klik kiri menumpuk, klik kanan untuk mengurangi</p>
+                <div id="builder-grid" class="builder-grid"></div>
             </div>
 
             <div class="action-buttons mt-20">
@@ -81,14 +78,12 @@
         <div class="frame-silver">
             <h1 style="color: #e74c3c; font-size: 3rem; margin: 0; letter-spacing: 2px;">SIMULATION ENDED</h1>
             <h2 class="yellow-text mt-20" style="font-size: 2rem;" id="final-team-name">TIM MISTERIUS</h2>
-            
             <div class="final-stats">
                 <p style="font-size: 1.2rem; margin: 5px;">Status: <strong id="gameover-reason" style="color: #e74c3c;">Waktu Habis</strong></p>
                 <p style="font-size: 1.2rem; margin: 5px;">Mencapai Round: <strong class="gold-text" id="final-level">0</strong></p>
                 <p style="font-size: 1.5rem; margin: 15px 0 5px 0;">TOTAL SCORE</p>
                 <h1 class="gold-text" style="font-size: 3.5rem; margin: 0;" id="final-score">0</h1>
             </div>
-
             <button class="blue-btn mt-20" onclick="location.reload()">MAIN LAGI</button>
         </div>
     </section>
