@@ -2,9 +2,12 @@ let currentRound = 1;
 let gridSize = 3;
 let maxHeight = 3;
 let targetMatrix = [];
-let targetProjections = {}; // Simpan cetak biru yang bener
-let playerMatrix = [];      // Simpan bangunan player
+let targetProjections = {}; 
+let playerMatrix = [];      
 let gameTimer;
+let globalTimerInterval; // Timer 10 menit
+let totalTime = 600; // 10 menit dalam detik
+
 let totalScore = 0;
 let teamName = "Tim Misterius";
 
@@ -22,9 +25,29 @@ function saveNameAndStart() {
     teamName = input;
     currentRound = 1;
     totalScore = 0;
+    totalTime = 600; // Reset ke 10 menit
     
+    startGlobalTimer(); // Mulai timer 10 menit
     startRound();
     showPage('page-game');
+}
+
+// --- GLOBAL TIMER 10 MENIT ---
+function startGlobalTimer() {
+    clearInterval(globalTimerInterval);
+    const display = document.getElementById('globalTimerDisplay');
+    
+    display.innerText = formatTime(totalTime);
+    
+    globalTimerInterval = setInterval(() => {
+        totalTime--;
+        display.innerText = formatTime(totalTime);
+        
+        if(totalTime <= 0) {
+            clearInterval(globalTimerInterval);
+            endGame("Waktu Sesi Habis (10 Menit)!");
+        }
+    }, 1000);
 }
 
 // 2. GENERATE LEVEL & MATRIKS
@@ -33,35 +56,27 @@ function startRound() {
     document.getElementById('feedback-msg').innerText = "";
     
     // Tingkat Kesulitan (Grid makin gede, kubus makin banyak)
-    // Round 1-2: 3x3. Round 3-4: 4x4. Round 5+: 5x5
     gridSize = Math.min(3 + Math.floor((currentRound - 1) / 2), 5); 
-    maxHeight = gridSize; // Tinggi maksimal sama dengan lebar grid
+    maxHeight = gridSize; 
     
-    // Timer: 10 menit (600s) buat round 1, nambah tiap ronde
-    let timeLimit = 600 + ((currentRound - 1) * 60);
+    // Timer Ronde gue sesuain biar masuk akal sama Total 10 Menit
+    // Mulai dari 2 menit (120s), nambah 30s tiap ronde
+    let timeLimit = 120 + ((currentRound - 1) * 30);
     runTimer(timeLimit);
 
-    // Bikin Matrix Target Acak
     generateTargetMatrix();
-    
-    // Hitung Proyeksi Cetak Biru (Atas, Depan, Kanan, Belakang, Kiri)
     targetProjections = calculateProjections(targetMatrix);
-
-    // Reset Meja Rakit Player
     playerMatrix = Array(gridSize).fill().map(() => Array(gridSize).fill(0));
 
-    // Render UI
     renderBlueprints();
     renderBuilderGrid();
 }
 
 function generateTargetMatrix() {
     targetMatrix = Array(gridSize).fill().map(() => Array(gridSize).fill(0));
-    // Isi kubus secara acak, pastiin ada strukturnya
-    let numCubesToPlace = Math.floor((gridSize * gridSize * maxHeight) * 0.4); // Sekitar 40% terisi
+    let numCubesToPlace = Math.floor((gridSize * gridSize * maxHeight) * 0.4); 
     
-    // Biar gak kosong banget, paksa isi minimal
-    if(currentRound === 1) numCubesToPlace = 15; // Setengah penuh buat pemanasan
+    if(currentRound === 1) numCubesToPlace = 15; 
     
     for(let i=0; i < numCubesToPlace; i++) {
         let x = Math.floor(Math.random() * gridSize);
@@ -72,7 +87,7 @@ function generateTargetMatrix() {
     }
 }
 
-// 3. ENGINE PROYEKSI (MATEMATIKA ARSITEKTUR)
+// 3. ENGINE PROYEKSI
 function calculateProjections(matrix) {
     let top = Array(gridSize).fill().map(() => Array(gridSize).fill(0));
     let frontHeights = Array(gridSize).fill(0);
@@ -81,28 +96,19 @@ function calculateProjections(matrix) {
     for(let y=0; y < gridSize; y++) {
         for(let x=0; x < gridSize; x++) {
             let h = matrix[y][x];
-            // 1. Tampak Atas (Footprint)
             if(h > 0) top[y][x] = 1;
-            
-            // 2. Tampak Depan (Max height tiap kolom X)
             if(h > frontHeights[x]) frontHeights[x] = h;
-            
-            // 3. Tampak Kiri (Max height tiap baris Y)
             if(h > leftHeights[y]) leftHeights[y] = h;
         }
     }
 
-    // Tampak Kanan adalah kebalikan dari Kiri
     let rightHeights = [...leftHeights].reverse();
-    // Tampak Belakang adalah kebalikan dari Depan
     let backHeights = [...frontHeights].reverse();
 
-    // Fungsi bantu buat ngubah array tinggi jadi matriks siluet 2D (Tinggi x Lebar)
     function createSilhouette(heightsArray) {
         let sil = Array(maxHeight).fill().map(() => Array(gridSize).fill(0));
         for(let x=0; x < gridSize; x++) {
             let h = heightsArray[x];
-            // Isi blok dari bawah (index maxHeight-1) ke atas
             for(let y = maxHeight - 1; y >= maxHeight - h; y--) {
                 sil[y][x] = 1;
             }
@@ -119,7 +125,7 @@ function calculateProjections(matrix) {
     };
 }
 
-// 4. RENDER BLUEPRINT KE LAYAR
+// 4. RENDER BLUEPRINT
 function renderBlueprints() {
     const area = document.getElementById('blueprint-area');
     area.innerHTML = '';
@@ -154,7 +160,7 @@ function renderBlueprints() {
     });
 }
 
-// 5. RENDER MEJA RAKIT (INTERAKTIF)
+// 5. RENDER MEJA RAKIT
 function renderBuilderGrid() {
     const grid = document.getElementById('builder-grid');
     grid.innerHTML = '';
@@ -169,13 +175,11 @@ function renderBuilderGrid() {
             cell.className = `build-cell lvl-${h}`;
             cell.innerText = h === 0 ? '' : h;
             
-            // Klik kiri nambah tinggi
             cell.onclick = () => {
                 playerMatrix[y][x] = (playerMatrix[y][x] + 1) % (maxHeight + 1);
-                renderBuilderGrid(); // Re-render buat update warna & angka
+                renderBuilderGrid(); 
             };
 
-            // Klik kanan ngurangin tinggi
             cell.oncontextmenu = (e) => {
                 e.preventDefault();
                 if(playerMatrix[y][x] > 0) {
@@ -195,14 +199,11 @@ function clearBuilder() {
     document.getElementById('feedback-msg').innerText = "";
 }
 
-// 6. VALIDASI HASIL RAKITAN
+// 6. VALIDASI HASIL
 function submitBuild() {
     const feedback = document.getElementById('feedback-msg');
-    
-    // Hitung proyeksi bangunan player saat ini
     let playerProjections = calculateProjections(playerMatrix);
     
-    // Bandingin sama target (pake JSON stringify biar gampang bandingin matriks 2D)
     let isTopMatch = JSON.stringify(playerProjections.top) === JSON.stringify(targetProjections.top);
     let isFrontMatch = JSON.stringify(playerProjections.front) === JSON.stringify(targetProjections.front);
     let isRightMatch = JSON.stringify(playerProjections.right) === JSON.stringify(targetProjections.right);
@@ -210,9 +211,8 @@ function submitBuild() {
     let isLeftMatch = JSON.stringify(playerProjections.left) === JSON.stringify(targetProjections.left);
 
     if(isTopMatch && isFrontMatch && isRightMatch && isBackMatch && isLeftMatch) {
-        // VALID! STRUKTUR COCOK!
-        clearInterval(gameTimer);
-        let roundScore = 1500 + (currentRound * 500); // Blox dapet poin gede krn susah
+        clearInterval(gameTimer); // Cuma berhentiin timer ronde
+        let roundScore = 1500 + (currentRound * 500); 
         totalScore += roundScore;
         document.getElementById('score-text').innerText = totalScore;
         
@@ -231,6 +231,8 @@ function nextRound() {
 
 function endGame(reason) {
     clearInterval(gameTimer);
+    clearInterval(globalTimerInterval); // Pastiin timer 10 menitnya mati juga
+    
     document.getElementById('final-team-name').innerText = teamName;
     document.getElementById('final-level').innerText = currentRound;
     document.getElementById('final-score').innerText = totalScore;
@@ -250,7 +252,7 @@ function runTimer(seconds) {
         display.innerText = formatTime(time);
         
         if(time <= 0) {
-            endGame("Waktu Habis (Konstruksi Gagal!)");
+            endGame("Waktu Ronde Habis (Konstruksi Gagal!)");
         }
     }, 1000);
 }
